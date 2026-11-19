@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLN SVG Studio</title>
+<meta name="description" content="Draw, check, review and export black-and-white line-art SVGs for FLN worksheets.">
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='%23fff' stroke='%231A1A1A' stroke-width='6'/%3E%3Ccircle cx='24' cy='28' r='4' fill='%231A1A1A'/%3E%3Ccircle cx='40' cy='28' r='4' fill='%231A1A1A'/%3E%3Cpath d='M22 40 Q32 48 42 40' fill='none' stroke='%231A1A1A' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"></span><div><strong>FLN SVG Studio</strong><small>Line art for early-grade worksheets</small></div></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-view="draw" class="active">Draw</button>
+    <button role="tab" data-view="review">Review <span id="review-count" class="pill">0</span></button>
+    <button role="tab" data-view="library">Library</button>
+    <button role="tab" data-view="guide">Guide</button>
+  </nav>
+</header>
+
+<main>
+<!-- ============ DRAW ============ -->
+<section id="view-draw" class="view active">
+  <div class="draw-grid">
+    <div class="panel editor-panel">
+      <div class="form-grid">
+        <label>Start from<select id="tpl"></select></label>
+        <label>Mode<select id="mode"><option value="code">Code with helpers</option><option value="raw">Raw SVG</option></select></label>
+        <label>File name<input id="f-file" placeholder="e.g. light-bulb" spellcheck="false"></label>
+        <label>Category<select id="f-cat"></select></label>
+        <label class="wide">Title<input id="f-title" placeholder="Object name, e.g. Light bulb"></label>
+        <label class="wide">Description<input id="f-desc" placeholder="Line drawing of ..."></label>
+      </div>
+      <div class="code-wrap">
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Drawing code"></textarea>
+      </div>
+      <div id="err" class="err" hidden></div>
+      <div class="actions">
+        <button id="btn-save" class="primary">Save to review</button>
+        <button id="btn-new">New drawing</button>
+        <button id="btn-download">Download SVG</button>
+        <button id="btn-copy">Copy SVG code</button>
+        <span id="save-msg" class="muted"></span>
+      </div>
+    </div>
+
+    <div class="panel preview-panel">
+      <div class="preview-head">
+        <h3>Preview</h3>
+        <label class="check"><input type="checkbox" id="grid-toggle"> Grid</label>
+        <label class="check"><input type="checkbox" id="pad-toggle" checked> Safe area</label>
+      </div>
+      <div class="stage" id="stage">
+        <div id="preview" class="preview"></div>
+        <svg class="overlay" id="overlay" viewBox="0 0 512 512" aria-hidden="true"></svg>
+      </div>
+      <div class="thumbs">
+        <div><div id="thumb-s" class="thumb s"></div><small>Small</small></div>
+        <div><div id="thumb-m" class="thumb m"></div><small>Worksheet size</small></div>
+        <p class="muted">Can a child name it at the small size? If not, simplify or add a stronger clue.</p>
+      </div>
+      <h3>Style check</h3>
+      <ul id="checks" class="checks"></ul>
+      <details class="docs"><summary>Helper reference</summary><table id="docs"></table></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section id="view-review" class="view">
+  <div class="panel toolbar">
+    <label class="file-btn">Import SVG files<input type="file" id="import" accept=".svg,image/svg+xml" multiple></label>
+    <select id="filter"><option value="all">All</option><option value="draft">To review</option><option value="approved">Approved</option><option value="redo">Redo</option></select>
+    <button id="btn-verdict">Copy verdict</button>
+    <button id="btn-zip" class="primary">Export approved (ZIP)</button>
+    <button id="btn-sheet">Contact sheet</button>
+    <span id="review-msg" class="muted"></span>
+  </div>
+  <p id="review-empty" class="empty">No drawings yet. Save one from <b>Draw</b> or import SVG files.</p>
+  <div id="cards" class="cards"></div>
+</section>
+
+<!-- ============ LIBRARY ============ -->
+<section id="view-library" class="view">
+  <div class="panel toolbar">
+    <label>GitHub repo<input id="lib-repo" value="lakshya-aran/fln-svg-library" spellcheck="false"></label>
+    <label>Branch<input id="lib-branch" value="main" class="short"></label>
+    <label>Folder<input id="lib-path" value="svgs/" class="short"></label>
+    <button id="lib-load" class="primary">Load</button>
+    <input id="lib-search" type="search" placeholder="Search…">
+    <span id="lib-msg" class="muted"></span>
+  </div>
+  <div id="lib-cats" class="chips"></div>
+  <div id="lib-grid" class="cards lib"></div>
+</section>
+
+<!-- ============ GUIDE ============ -->
+<section id="view-guide" class="view">
+  <div class="panel prose">
+    <h2>How to make a drawing</h2>
+    <ol>
+      <li><b>Pick a template</b> under <i>Start from</i>, or start blank. Set the file name, category, title and description.</li>
+      <li><b>Draw with code.</b> Return the drawing as a string of SVG shapes. Helpers like <code>eye()</code>, <code>tubes()</code>, <code>bumpy()</code> and <code>digit()</code> do the fiddly parts. The preview updates as you type.</li>
+      <li><b>Fix the style check.</b> Everything should be green: black and white, rounded lines, light ink, inside the safe area.</li>
+      <li><b>Check the small preview.</b> If a child would not name it at worksheet size, add a stronger clue (a stem, a cut half, a label) or change the angle.</li>
+      <li><b>Save to review.</b> In <i>Review</i>, mark each drawing Approve or Redo with a note, then <i>Copy verdict</i> to share it.</li>
+      <li><b>Export approved.</b> The ZIP has one folder per category (<code>fruits/apple.svg</code>), ready to drop into the library repo.</li>
+    </ol>
+    <h2>Style rules</h2>
+    <ul>
+      <li><b>Outline only</b>, white fill, black <code>#1A1A1A</code> lines. No colour or grey.</li>
+      <li><b>Line weights:</b> 8 for the main outline, 5 for inner details, 3.5 for fine texture. Always rounded ends.</li>
+      <li><b>Solid black only where it helps recognition</b> — pupils, nostrils, a panda's patches, a bee's stripes.</li>
+      <li><b>Recognisable without colour</b>: use real-world clues — seeds, cut halves, textures, labels like GLUE.</li>
+      <li><b>Realistic proportions</b>, like textbooks and picture cards. Friendly cartoon faces are fine.</li>
+      <li><b>Canvas</b> <code>0 0 512 512</code>, object fills 80–90%, about 24 px padding, <code>&lt;title&gt;</code> and <code>&lt;desc&gt;</code> required.</li>
+      <li><b>Not allowed:</b> images, text elements, fonts, gradients, filters, scripts, brand names.</li>
+      <li><b>Names:</b> lowercase-kebab-case, e.g. <code>cricket-bat.svg</code>.</li>
+    </ul>
+    <h2>Without code</h2>
+    <p>You can also draw in <a href="https://inkscape.org" target="_blank" rel="noopener">Inkscape</a> (free), save as Plain SVG, then use <i>Mode → Raw SVG</i> or <i>Review → Import</i> to run the same style check and review.</p>
+  </div>
+</section>
+</main>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-card">
+    <button class="close" id="modal-close" aria-label="Close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/lint.js"></script>
+<script src="js/examples.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
