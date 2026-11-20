@@ -27,6 +27,7 @@ It packages the whole workflow used to build the [FLN SVG library](https://githu
 |---|---|
 | Round fruit / vegetable | apple, orange, lemon, tomato, watermelon, pumpkin, pomegranate, pear, onion, radish |
 | Fruit cut in half | orange slice, kiwi slice, apple slice, tree rings |
+| Person | boy, girl, school boy, school girl, man, woman, teacher, family (also “5 boys”) |
 | Animal face | cat, dog, rabbit, mouse, bear, panda, lion, tiger, pig, cow, monkey, fox, elephant, sheep, frog, owl |
 | Vehicle | car, taxi, bus, school bus, van, truck, jeep |
 | Flower / tree | flower, daisy, marigold, flower in a pot, tree, pine tree, fruit tree, bush, Christmas tree |

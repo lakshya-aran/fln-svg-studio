@@ -595,6 +595,76 @@
     }
   };
 
+  /* ---------- people (front view, standing) ---------- */
+  FAM.person = {
+    name: "Person",
+    params: { who: ["boy", "girl", "school-boy", "school-girl", "man", "woman", "teacher", "family"], pose: ["stand", "wave"] },
+    build(p) {
+      if (p.who === "family") {
+        const fig = (who, cx, s) => { const b = FAM.person.build({ who, pose: "stand" }); return `<g transform="translate(${n1(cx - 256 * s)} ${n1(470 - 470 * s)})">${shrink(b, s)}</g>`; };
+        return [fig("man", 110, 0.56), fig("woman", 214, 0.54), fig("girl", 318, 0.44), fig("boy", 412, 0.42)].join("\n");
+      }
+      const adult = ["man", "woman", "teacher"].includes(p.who);
+      const girl = ["girl", "school-girl", "woman", "teacher"].includes(p.who);
+      const G = adult ? { hy: 86, hr: 44, sh: 150, wa: 292, ft: 456, sw: 56, aw: 24, lw: 26 } : { hy: 120, hr: 54, sh: 196, wa: 320, ft: 456, sw: 50, aw: 22, lw: 22 };
+      const { hy, hr, sh, wa, ft, sw, aw, lw } = G, cx = 256, out = [];
+      const dress = p.who === "girl" || p.who === "school-girl";      // frock / pinafore
+      const kurta = p.who === "woman" || p.who === "teacher";        // long top over trousers
+      const shorts = p.who === "boy" || p.who === "school-boy";
+      const hem = dress ? wa + 66 : kurta ? wa + 70 : wa;
+      // hair that sits behind the head
+      if (p.who === "woman" || p.who === "teacher") out.push(`<circle cx="${cx}" cy="${hy - hr - 6}" r="${n1(hr * 0.42)}"/>`);
+      if (p.who === "school-girl") out.push(tubes([`M${cx - hr + 6} ${hy + 4} C${cx - hr - 6} ${hy + 50} ${cx - hr - 4} ${hy + 80} ${cx - hr - 10} ${sh + 40}`, `M${cx + hr - 6} ${hy + 4} C${cx + hr + 6} ${hy + 50} ${cx + hr + 4} ${hy + 80} ${cx + hr + 10} ${sh + 40}`], 16));
+      if (p.who === "girl") out.push(`<path d="${bumpy(cx - hr - 16, hy - 20, 26, 34, 7, 0.6)}"/><path d="${bumpy(cx + hr + 16, hy - 20, 26, 34, 7, 0.6)}"/>`);
+      // legs and shoes
+      const legTop = dress ? hem - 10 : kurta ? hem - 10 : wa + 40;
+      out.push(tubes([`M${cx - 24} ${legTop} V${ft - 10}`, `M${cx + 24} ${legTop} V${ft - 10}`], lw));
+      if (dress || shorts) out.push(det(`M${cx - 36} ${ft - 40} H${cx - 12} M${cx + 12} ${ft - 40} H${cx + 36}`, 4)); // socks
+      out.push(`<path d="M${cx - 50} ${ft + 4} C${cx - 52} ${ft - 18} ${cx - 10} ${ft - 22} ${cx - 8} ${ft - 2} V${ft + 6} H${cx - 46} Z"/>`,
+               `<path d="M${cx + 50} ${ft + 4} C${cx + 52} ${ft - 18} ${cx + 10} ${ft - 22} ${cx + 8} ${ft - 2} V${ft + 6} H${cx + 46} Z"/>`);
+      // trousers / shorts
+      if (!dress) {
+        const bot = shorts ? wa + 62 : ft - 16;
+        out.push(`<path d="M${cx - sw + 6} ${wa - 4} H${cx + sw - 6} L${cx + sw - 2} ${bot} H${cx + 6} L${cx} ${wa + 30} L${cx - 6} ${bot} H${cx - sw + 2} Z"/>`);
+      }
+      // arms (behind the body), hands
+      const lh = [cx - sw - 18, wa - 6], rh = p.pose === "wave" ? [cx + sw + 60, sh - 60] : [cx + sw + 18, wa - 6];
+      out.push(tubes([`M${cx - sw + 8} ${sh + 14} L${lh[0]} ${lh[1]}`, `M${cx + sw - 8} ${sh + 14} L ${rh[0]} ${rh[1]}`], aw));
+      out.push(`<circle cx="${lh[0]}" cy="${lh[1] + 10}" r="${aw * 0.62}"/><circle cx="${rh[0]}" cy="${rh[1] + (p.pose === "wave" ? -10 : 10)}" r="${aw * 0.62}"/>`);
+      // body: top (shirt / frock / kurta)
+      const top = (bottom, flare) => `M${cx - sw} ${sh + 8} Q${cx - sw + 4} ${sh - 4} ${cx - 22} ${sh - 6} H${cx + 22} Q${cx + sw - 4} ${sh - 4} ${cx + sw} ${sh + 8} ` +
+        `L${cx + sw - 6} ${wa - 30} L${cx + sw - 6 + flare} ${bottom} H${cx - sw + 6 - flare} L${cx - sw + 6} ${wa - 30} Z`;
+      out.push(`<path d="${top(hem, dress ? 46 : kurta ? 14 : 0)}"/>`);
+      if (!adult) out.push(`<path d="M${cx - sw} ${sh + 8} L${cx - sw - 22} ${sh + 56} L${cx - sw + 4} ${sh + 66} Z"/>`,
+        p.pose === "wave" ? `<path d="M${cx + sw} ${sh + 8} L${cx + sw + 30} ${sh + 30} L${cx + sw + 10} ${sh + 56} Z"/>` : `<path d="M${cx + sw} ${sh + 8} L${cx + sw + 22} ${sh + 56} L${cx + sw - 4} ${sh + 66} Z"/>`);
+      if (adult) out.push(det(`M${lh[0] - 12} ${lh[1] - 12} L${lh[0] + 12} ${lh[1] - 6} M${rh[0] - 12} ${rh[1] + (p.pose === "wave" ? 6 : -12)} L${rh[0] + 12} ${rh[1] + (p.pose === "wave" ? 16 : -6)}`, 4));
+      // collar, buttons, tie, belt, dress details
+      out.push(det(`M${cx - 22} ${sh - 4} L${cx} ${sh + 22} L${cx + 22} ${sh - 4}`, 5));
+      if (p.who === "school-boy" || p.who === "school-girl") out.push(`<path d="M${cx - 8} ${sh + 18} H${cx + 8} L${cx + 12} ${sh + 30} L${cx + 6} ${wa - 40} L${cx} ${wa - 28} L${cx - 6} ${wa - 40} L${cx - 12} ${sh + 30} Z" stroke-width="5"/>`);
+      else if (!dress) out.push(dot(cx, sh + 40, 4), dot(cx, sh + 70, 4), dot(cx, sh + 100, 4));
+      if (p.who === "man" || shorts) out.push(det(`M${cx - sw + 6} ${wa - 4} H${cx + sw - 6}`, 5));
+      if (dress) out.push(det(`M${cx - sw + 6} ${wa - 30} H${cx + sw - 6}`, 5), det(Array.from({ length: 7 }, (_, i) => { const x = cx - sw - 40 + i * (2 * sw + 80) / 7; return `M${n1(x)} ${hem} Q${n1(x + (sw + 40) / 7)} ${hem - 14} ${n1(x + (2 * sw + 80) / 7)} ${hem}`; }).join(" "), 4));
+      if (p.who === "school-girl") out.push(det(`M${cx - sw + 14} ${sh + 4} V${wa - 30} M${cx + sw - 14} ${sh + 4} V${wa - 30}`, 5));
+      if (kurta) out.push(det(`M${cx - sw + 6} ${hem - 24} H${cx + sw - 6}`, 4), `<path d="M${cx - sw - 4} ${sh + 6} C${cx - 20} ${sh + 70} ${cx + 30} ${sh + 90} ${cx + sw + 4} ${sh + 120}" fill="none" stroke-width="10"/>`);
+      if (p.who === "teacher") out.push(`<g transform="rotate(-12 ${lh[0] + 10} ${lh[1] - 30})"><rect x="${lh[0] - 30}" y="${lh[1] - 70}" width="66" height="84" rx="4"/>${det(`M${lh[0] + 3} ${lh[1] - 70} V${lh[1] + 14}`, 4)}</g>`);
+      // head
+      out.push(`<rect x="${cx - 12}" y="${hy + hr - 6}" width="24" height="${sh - hy - hr + 4}" rx="4"/>`);
+      out.push(`<circle cx="${cx - hr}" cy="${hy + 4}" r="${n1(hr * 0.22)}"/><circle cx="${cx + hr}" cy="${hy + 4}" r="${n1(hr * 0.22)}"/>`);
+      out.push(`<circle cx="${cx}" cy="${hy}" r="${hr}"/>`);
+      // hair on top
+      const capLong = girl ? hr * 0.18 : 0;
+      out.push(`<path d="M${n1(cx - hr - 2)} ${n1(hy + 6 + capLong)} C${n1(cx - hr - 6)} ${n1(hy - hr * 1.45)} ${n1(cx + hr + 6)} ${n1(hy - hr * 1.45)} ${n1(cx + hr + 2)} ${n1(hy + 6 + capLong)} ` +
+        `C${n1(cx + hr * 0.8)} ${n1(hy - hr * 0.3)} ${n1(cx + hr * 0.3)} ${n1(hy - hr * 0.5)} ${cx} ${n1(hy - hr * 0.42)} C${n1(cx - hr * 0.4)} ${n1(hy - hr * 0.5)} ${n1(cx - hr * 0.7)} ${n1(hy - hr * 0.2)} ${n1(cx - hr - 2)} ${n1(hy + 6 + capLong)} Z"/>`);
+      if (p.who === "girl") out.push(`<path d="M${cx + hr * 0.5} ${hy - hr * 0.9} l18 -14 v28 Z M${cx + hr * 0.5} ${hy - hr * 0.9} l-18 -14 v28 Z" stroke-width="5"/>`);
+      if (p.who === "school-girl") out.push(`<path d="M${cx - hr - 10} ${sh + 40} l-14 10 l14 10 l14 -10 Z M${cx + hr + 10} ${sh + 40} l-14 10 l14 10 l14 -10 Z" stroke-width="4"/>`);
+      // face
+      const k = hr / 54;
+      out.push(eye(n1(cx - 20 * k), n1(hy + 4 * k), n1(7 * k)), eye(n1(cx + 20 * k), n1(hy + 4 * k), n1(7 * k)));
+      out.push(det(`M${n1(cx - 2 * k)} ${n1(hy + 14 * k)} l${n1(4 * k)} ${n1(8 * k)}`, 4), det(`M${n1(cx - 16 * k)} ${n1(hy + 28 * k)} C${n1(cx - 8 * k)} ${n1(hy + 38 * k)} ${n1(cx + 8 * k)} ${n1(hy + 38 * k)} ${n1(cx + 16 * k)} ${n1(hy + 28 * k)}`, 5));
+      return out.join("\n");
+    }
+  };
+
   /* =====================================================================
      CATALOG — object name → recipe.  [family, params, category, aliases, description]
      ===================================================================== */
@@ -673,6 +743,17 @@
   // buildings
   [["house", ["ghar", "घर", "home"]], ["hut", ["jhopdi", "झोपड़ी"]], ["flats", ["building", "apartment"]], ["shop", ["dukaan", "दुकान", "store"]], ["tent", ["camp"]], ["igloo", []]]
     .forEach(([k, al]) => add(k, "building", { kind: k }, "household", al, `a ${k}`));
+
+  // people
+  [["boy", "boy", ["ladka", "लड़का", "child", "kid"], "a boy in a T-shirt and shorts"],
+   ["girl", "girl", ["ladki", "लड़की"], "a girl in a frock with two bunches of hair"],
+   ["school boy", "school-boy", ["student", "schoolboy", "boy in uniform"], "a schoolboy in uniform with a tie"],
+   ["school girl", "school-girl", ["schoolgirl", "girl in uniform"], "a schoolgirl in uniform with two braids and a tie"],
+   ["man", "man", ["aadmi", "father", "papa", "आदमी"], "a man in a shirt and trousers"],
+   ["woman", "woman", ["aurat", "mother", "mummy", "lady", "औरत"], "a woman in a kurta with a dupatta"],
+   ["teacher", "teacher", ["shikshak", "madam", "teacher with book", "शिक्षक"], "a teacher holding a book"],
+   ["family", "family", ["parivar", "परिवार"], "a family: father, mother, girl and boy"]]
+    .forEach(([nm, who, al, d]) => add(nm, "person", { who, pose: "stand" }, "body-parts", al, d));
 
   // balls
   [["ball", "plain", ["gend", "गेंद"]], ["cricket ball", "cricket", []], ["tennis ball", "tennis", []], ["volleyball", "volleyball", []], ["beach ball", "beach", []]]
@@ -782,6 +863,7 @@
     // vary something visible for families that have options
     if (e.fam === "sky") results[1] = fromEntry(e, 2, { face: true });
     if (e.fam === "fruit" && e.params.top !== "none") results[2] = fromEntry(e, 3, { top: e.params.top === "stem-leaf" ? "stem" : "stem-leaf" });
+    if (e.fam === "person" && e.params.who !== "family") results[1] = fromEntry(e, 2, { pose: "wave" });
     if (e.fam === "flower") { results[1] = fromEntry(e, 2, { pot: !e.params.pot }); results[2] = fromEntry(e, 3, { petals: e.params.petals === 6 ? 8 : 6 }); }
     const unique = [], seen = new Set();
     for (const r of results) if (!seen.has(r.svg)) { seen.add(r.svg); unique.push(r); }

@@ -299,11 +299,14 @@
   }
   /** Hand-drawn library drawings whose name matches the query (needs internet; skipped quietly offline). */
   async function showLibraryMatches(q) {
-    const box = $("#mk-lib"), key = q.toLowerCase().replace(/^\d+\s+/, "").replace(/ies$/, "y").replace(/s$/, "").trim();
-    box.innerHTML = ""; if (key.length < 3) return;
+    const box = $("#mk-lib"), raw = q.toLowerCase().replace(/^\d+\s+/, "").replace(/[^a-z\s-]/g, " ").trim();
+    box.innerHTML = ""; if (raw.length < 3) return;
+    const sing = (w) => w.replace(/ies$/, "y").replace(/(ch|sh|x|o)es$/, "$1").replace(/([^s])s$/, "$1");
+    const qWords = raw.split(/[\s-]+/).map(sing);
     if (!lib.loaded) { try { await loadLibrary(); } catch (e) { return; } }
     if ($("#mk-q").value.trim() !== q) return;
-    const hits = lib.items.filter((i) => i.name.replace(/-/g, " ").includes(key) || key.includes(i.name.replace(/-/g, " "))).slice(0, 8);
+    // a library drawing matches when every word typed is one of the words in its name ("cricket" → cricket-bat, "bus" → bus, not "school bus" → school-building)
+    const hits = lib.items.filter((i) => { const nw = i.name.split("-").map(sing); return qWords.every((w) => nw.includes(w)); }).slice(0, 8);
     if (!hits.length) return;
     box.innerHTML = `<h3>From the hand-drawn library</h3><div class="cards lib">${hits.map((i) => `<div class="card" data-path="${esc(i.path)}"><div class="art"><img loading="lazy" src="${esc(i.url)}" alt="${esc(i.name)}"></div><div class="name">${esc(i.name)}</div><div class="cat">${esc(i.cat)}</div></div>`).join("")}</div>`;
     if (!made.length) $("#mk-msg").innerHTML = `No recipe for “${esc(q)}”, but the library has it:`;
