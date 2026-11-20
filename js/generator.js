@@ -738,7 +738,7 @@
   add("smiling sun", "sky", { kind: "sun", face: true }, "nature-environment", ["happy sun"], "a smiling sun");
 
   // feelings
-  ["happy", "sad", "angry", "surprised", "sleepy", "crying", "laughing", "scared"].forEach((m) => add(m + " face", "feeling", { mood: m }, "body-parts", [m, m === "happy" ? "smiley" : ""].filter(Boolean), `a ${m} face`));
+  ["happy", "sad", "angry", "surprised", "sleepy", "crying", "laughing", "scared"].forEach((m) => add(m + " face", "feeling", { mood: m }, "people", [m, m === "happy" ? "smiley" : ""].filter(Boolean), `a ${m} face`));
 
   // buildings
   [["house", ["ghar", "घर", "home"]], ["hut", ["jhopdi", "झोपड़ी"]], ["flats", ["building", "apartment"]], ["shop", ["dukaan", "दुकान", "store"]], ["tent", ["camp"]], ["igloo", []]]
@@ -753,7 +753,7 @@
    ["woman", "woman", ["aurat", "mother", "mummy", "lady", "औरत"], "a woman in a kurta with a dupatta"],
    ["teacher", "teacher", ["shikshak", "madam", "teacher with book", "शिक्षक"], "a teacher holding a book"],
    ["family", "family", ["parivar", "परिवार"], "a family: father, mother, girl and boy"]]
-    .forEach(([nm, who, al, d]) => add(nm, "person", { who, pose: "stand" }, "body-parts", al, d));
+    .forEach(([nm, who, al, d]) => add(nm, "person", { who, pose: "stand" }, "people", al, d));
 
   // balls
   [["ball", "plain", ["gend", "गेंद"]], ["cricket ball", "cricket", []], ["tennis ball", "tennis", []], ["volleyball", "volleyball", []], ["beach ball", "beach", []]]

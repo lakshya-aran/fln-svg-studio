@@ -4,7 +4,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const CATEGORIES = ["animals", "birds", "fruits", "vegetables", "food", "flowers-plants", "nature-environment", "stationery", "school",
-    "household", "transport", "clothing", "sports", "toys", "shapes-colors", "numbers-counting", "body-parts"];
+    "household", "transport", "clothing", "sports", "toys", "shapes-colors", "numbers-counting", "body-parts", "people"];
   const STORE = "fln-studio-drafts-v1", CUR = "fln-studio-current-v1";
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
