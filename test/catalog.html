@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;font:12px sans-serif}#g{display:grid;grid-template-columns:repeat(10,150px);gap:4px}div.c{border:1px solid #ddd;text-align:center}div.c svg{width:150px;height:150px;display:block}.err{color:red}</style>
+<div id="g"></div>
+<script src="../js/helpers.js"></script><script src="../js/generator.js"></script>
+<script>
+const g=document.getElementById('g');const qs=new URLSearchParams(location.search);
+let names=Object.keys(FLNGen.catalog); if(qs.get('q')) names=qs.get('q').split('|');
+const from=+(qs.get('from')||0), to=+(qs.get('to')||999);
+names.slice(from,to).forEach(n=>{let html;try{const r=FLNGen.make(n);html=r.results.length?r.results[0].svg:'<p class=err>'+r.note+'</p>'}catch(e){html='<p class=err>'+e.message+'</p>'}
+const d=document.createElement('div');d.className='c';d.innerHTML=html+'<span>'+n+'</span>';g.appendChild(d)});
+</script>

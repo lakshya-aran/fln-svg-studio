@@ -242,9 +242,9 @@
   $("#lib-load").addEventListener("click", loadLibrary);
   $("#lib-search").addEventListener("input", renderLibrary);
   $("#lib-cats").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { lib.cat = b.dataset.cat; renderLibrary(); } });
-  $("#lib-grid").addEventListener("click", async (e) => {
-    const card = e.target.closest(".card"); if (!card) return;
-    const it = lib.items.find((i) => i.path === card.dataset.path); if (!it) return;
+  $("#lib-grid").addEventListener("click", (e) => { const card = e.target.closest(".card"); if (card) openLibItem(card.dataset.path); });
+  async function openLibItem(path) {
+    const it = lib.items.find((i) => i.path === path); if (!it) return;
     try {
       const text = await (await fetch(it.url)).text();
       const doc = new DOMParser().parseFromString(text, "image/svg+xml");
@@ -254,6 +254,80 @@
         ["Download", () => download(it.name + ".svg", text)]
       ], ds ? ds.textContent : "");
     } catch (err) { flash($("#lib-msg"), "Could not open that file."); }
+  }
+
+  /* ---------------- MAKE (rule-based generator) ---------------- */
+  const REQUEST_URL = "https://github.com/lakshya-aran/fln-svg-library/issues/new";
+  let made = [];
+  FLNGen.examples.forEach((x) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = x;
+    b.onclick = () => { $("#mk-q").value = x; doMake(); };
+    $("#mk-examples").appendChild(b);
+  });
+  (function book() {
+    const byFam = {};
+    Object.values(FLNGen.catalog).forEach((e) => (byFam[e.fam] = byFam[e.fam] || []).push(e.name));
+    const extra = { counting: ["5 apples", "clock 3:30", "letter A … Z", "number 0 … 99", "dice 1 … 6", "ten frame 0 … 10", "tally 1 … 20", "domino 3 4", "number line 0 to 10"] };
+    $("#mk-book").innerHTML = Object.entries(FLNGen.families).map(([k, f]) =>
+      `<h4>${esc(f.name)}</h4><div class="chips">${[...(byFam[k] || []), ...(extra[k] || [])].map((n) => `<button type="button" data-q="${esc(n)}">${esc(n)}</button>`).join("")}</div>`).join("");
+    $("#mk-book").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-q]"); if (!b || b.dataset.q.includes("…")) return;
+      $("#mk-q").value = b.dataset.q; doMake(); window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  })();
+  function doMake() {
+    const q = $("#mk-q").value.trim();
+    let res;
+    try { res = FLNGen.make(q); } catch (e) { res = { results: [], note: "Something went wrong: " + e.message }; }
+    made = res.results;
+    const req = `${REQUEST_URL}?title=${encodeURIComponent("Drawing request: " + q)}&body=${encodeURIComponent("Please add a recipe or drawing for: " + q)}`;
+    const sug = (res.suggestions || []).map((n) => `<a href="#" data-q="${esc(n)}">${esc(n)}</a>`).join(", ");
+    $("#mk-msg").innerHTML = made.length
+      ? `${esc(res.note || "")} ${made.length > 1 ? "Pick the version you like." : ""}${sug ? ` Also: ${sug}.` : ""}`
+      : `${esc(res.note || "")}${sug ? ` Did you mean ${sug}?` : ""} ${q ? `<a href="${esc(req)}" target="_blank" rel="noopener">Request it</a> and it can be added to the library.` : ""}`;
+    showLibraryMatches(q);
+    $("#mk-results").innerHTML = made.map((r, i) => `
+      <div class="card" data-i="${i}">
+        <div class="art" data-act="zoom">${safeSvg(r.svg)}</div>
+        <div><div class="name">${esc(r.title)}</div><div class="cat">${esc(r.category)}/${esc(r.file)}.svg</div></div>
+        <div class="row">
+          <button data-act="save" class="primary">Save to review</button>
+          <button data-act="edit">Edit</button>
+          <button data-act="dl">Download</button>
+        </div>
+      </div>`).join("");
+  }
+  /** Hand-drawn library drawings whose name matches the query (needs internet; skipped quietly offline). */
+  async function showLibraryMatches(q) {
+    const box = $("#mk-lib"), key = q.toLowerCase().replace(/^\d+\s+/, "").replace(/ies$/, "y").replace(/s$/, "").trim();
+    box.innerHTML = ""; if (key.length < 3) return;
+    if (!lib.loaded) { try { await loadLibrary(); } catch (e) { return; } }
+    if ($("#mk-q").value.trim() !== q) return;
+    const hits = lib.items.filter((i) => i.name.replace(/-/g, " ").includes(key) || key.includes(i.name.replace(/-/g, " "))).slice(0, 8);
+    if (!hits.length) return;
+    box.innerHTML = `<h3>From the hand-drawn library</h3><div class="cards lib">${hits.map((i) => `<div class="card" data-path="${esc(i.path)}"><div class="art"><img loading="lazy" src="${esc(i.url)}" alt="${esc(i.name)}"></div><div class="name">${esc(i.name)}</div><div class="cat">${esc(i.cat)}</div></div>`).join("")}</div>`;
+    if (!made.length) $("#mk-msg").innerHTML = `No recipe for “${esc(q)}”, but the library has it:`;
+  }
+  $("#mk-lib").addEventListener("click", (e) => { const c = e.target.closest(".card"); if (c) openLibItem(c.dataset.path); });
+  $("#mk-form").addEventListener("submit", (e) => { e.preventDefault(); doMake(); });
+  $("#mk-msg").addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-q]"); if (!a) return;
+    e.preventDefault(); $("#mk-q").value = a.dataset.q; doMake();
+  });
+  $("#mk-results").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-act]"); if (!btn) return;
+    const r = made[+btn.closest(".card").dataset.i]; if (!r) return;
+    const act = btn.dataset.act;
+    if (act === "zoom") openModal(r.title, r.svg, [], r.desc);
+    else if (act === "dl") download(r.file + ".svg", r.svg);
+    else if (act === "edit") openInEditor(r.code ? { mode: "code", code: r.code, file: r.file, category: r.category, title: r.title, desc: r.desc }
+      : { mode: "raw", code: r.svg, file: r.file, category: r.category, title: r.title, desc: r.desc });
+    else if (act === "save") {
+      const drafts = store.get(STORE, []);
+      drafts.push({ id: uid(), file: r.file, category: CATEGORIES.includes(r.category) ? r.category : "household", title: r.title, desc: r.desc,
+        mode: r.code ? "code" : "raw", code: r.code || r.svg, svg: r.svg, status: "draft", note: "", updated: Date.now() });
+      store.set(STORE, drafts); updateCount(); btn.textContent = "Saved ✓"; btn.disabled = true;
+    }
   });
 
   /* ---------------- modal ---------------- */
@@ -269,6 +343,7 @@
 
   /* ---------------- start ---------------- */
   drawOverlay(); updateCount();
+  try { const q0 = new URLSearchParams(location.search).get("q"); if (q0) { $("#mk-q").value = q0; doMake(); } } catch (e) { /* no query */ }
   const cur = store.get(CUR, null);
   if (cur && cur.code) {
     modeSel.value = cur.mode || "code"; code.value = cur.code; fFile.value = cur.file || ""; fCat.value = cur.cat || "household";

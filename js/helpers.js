@@ -173,6 +173,7 @@ ${String(body).trim()}
     ["word('GLUE', x, y, s=1)", "Capital letters A B C E G H L O P R S U."],
     ["rupee(cx, cy, s=1)", "₹ symbol."],
     ["P(cx, cy, r, angle)", "Point on a circle → [x, y]. f2(point) → \"x y\" for path data."],
+    ["gen(family, params, seed)", "Build a whole drawing from a recipe, e.g. gen(\"fruit\", {shape: \"apple\", top: \"stem-leaf\"}) or gen(\"face\", {animal: \"cat\"}). Families: fruit, slice, face, vehicle, flower, tree, container, shape, sky, feeling, building, ball, counting."],
     ["DASH", "Attribute for dashed hidden edges: <path ... ${DASH}/>"],
     ["K / W", "The two allowed colours: black #1A1A1A and white #FFFFFF."]
   ];

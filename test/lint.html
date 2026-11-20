@@ -1,0 +1,7 @@
+<!doctype html><meta charset="utf-8"><pre id="o">running</pre>
+<script src="../js/helpers.js"></script><script src="../js/lint.js"></script><script src="../js/generator.js"></script>
+<script>
+(async()=>{const qs=[...Object.keys(FLNGen.catalog),'5 apples','clock 3:30','letter B','number 7','dice 4','ten frame 6','tally 8','domino 3 4','number line 0 to 10'];
+let out=[],ok=0;for(const q of qs){for(const r of FLNGen.make(q).results){const res=await FLNLint.full(r.svg);const bad=res.checks.filter(c=>c.level!=='ok');if(bad.length)out.push(q+': '+bad.map(c=>c.msg).join(' | '));else ok++;}}
+document.getElementById('o').textContent='clean: '+ok+'\n'+out.join('\n');})();
+</script>
